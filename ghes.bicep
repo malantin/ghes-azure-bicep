@@ -25,6 +25,11 @@ param location string = resourceGroup().location
 param admin_username string
 
 @secure()
+@description('Password or SSH public key is required. SSH is recommended.')
+param admin_ssh_public_key string
+
+@secure()
+@description('If you have set an SSH public key, a password is not required.')
 param admin_password string
 
 // See https://docs.microsoft.com/en-us/azure/templates/microsoft.compute/virtualmachines for more option
@@ -75,7 +80,18 @@ resource ghes_appliance 'Microsoft.Compute/virtualMachines@2021-07-01' = {
     osProfile: {
       computerName: '${environment_prefix}-${environment_name}-ghes'
       adminUsername: admin_username
-      adminPassword: admin_password
+      adminPassword: (!empty(admin_password)? admin_password : null)
+      linuxConfiguration: {
+        disablePasswordAuthentication: (empty(admin_ssh_public_key) ? false : true)
+        ssh: (!empty(admin_ssh_public_key) ? {
+          publicKeys: [
+            {
+              keyData: admin_ssh_public_key
+              path: '/home/${admin_username}/.ssh/authorized_keys'
+            }
+          ]
+        }: null)
+      }
     }
     storageProfile: {
       imageReference: {
