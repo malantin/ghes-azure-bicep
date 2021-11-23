@@ -32,9 +32,17 @@ param admin_ssh_public_key string
 @description('If you have set an SSH public key, a password is not required.')
 param admin_password string
 
+@description('How many replicas do you want to create, including your primary?')
+@allowed([
+  1
+  2
+  3
+])
+param number_of_replicas int
+
 // See https://docs.microsoft.com/en-us/azure/templates/microsoft.compute/virtualmachines for more option
-resource ghes_appliance 'Microsoft.Compute/virtualMachines@2021-07-01' = {
-  name: '${environment_prefix}-${environment_name}-ghes'
+resource ghes_appliance 'Microsoft.Compute/virtualMachines@2021-07-01' = [for i in range(1, number_of_replicas):{
+  name: '${environment_prefix}-${environment_name}-ghes-${i}'
   location: location
   dependsOn: [
     ghes_appliance_vnet
@@ -47,20 +55,20 @@ resource ghes_appliance 'Microsoft.Compute/virtualMachines@2021-07-01' = {
       networkApiVersion: '2020-11-01'
       networkInterfaceConfigurations: [
         {
-          name: '${environment_prefix}-${environment_name}-ghes-nic'
+          name: '${environment_prefix}-${environment_name}-ghes-${i}-nic'
           properties: {
             ipConfigurations: [
               {
-                name: '${environment_prefix}-${environment_name}-ghes-nic-config'
+                name: '${environment_prefix}-${environment_name}-ghes-${i}-nic-config'
                 properties: {
                   subnet: {
                     id: ghes_appliance_vnet.properties.subnets[0].id
                   }
                   publicIPAddressConfiguration: {
-                    name: '${environment_prefix}-${environment_name}-ghes-nic-publicip'
+                    name: '${environment_prefix}-${environment_name}-ghes-${i}-nic-publicip'
                     properties: {
                       dnsSettings: {
-                        domainNameLabel: '${environment_prefix}-${environment_name}-ghes'
+                        domainNameLabel: '${environment_prefix}-${environment_name}-ghes-${i}'
                       }
                       publicIPAddressVersion: 'IPv4'
                       publicIPAllocationMethod: 'Static'
@@ -78,7 +86,7 @@ resource ghes_appliance 'Microsoft.Compute/virtualMachines@2021-07-01' = {
       ]
     }
     osProfile: {
-      computerName: '${environment_prefix}-${environment_name}-ghes'
+      computerName: '${environment_prefix}-${environment_name}-ghes-${i}'
       adminUsername: admin_username
       adminPassword: (!empty(admin_password)? admin_password : null)
       linuxConfiguration: {
@@ -108,7 +116,7 @@ resource ghes_appliance 'Microsoft.Compute/virtualMachines@2021-07-01' = {
       }
       dataDisks: [
         {
-          name: '${environment_prefix}-${environment_name}-ghes-datadisk'
+          name: '${environment_prefix}-${environment_name}-ghes-${i}-datadisk'
           caching: 'ReadWrite'
           createOption: 'Empty'
           lun: 2
@@ -120,7 +128,7 @@ resource ghes_appliance 'Microsoft.Compute/virtualMachines@2021-07-01' = {
       ] 
     }
   }
-}
+}]
 
 resource ghes_appliance_nsg 'Microsoft.Network/networkSecurityGroups@2021-03-01' = {
   name: '${environment_prefix}-${environment_name}-ghes-nsg'

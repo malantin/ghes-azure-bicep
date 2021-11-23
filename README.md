@@ -9,7 +9,7 @@ Now your can run the template. The region of your deployment will match your res
 
 `az deployment group create -g <groupname> -f ghes.bicep -p ghes.parameters.json`
 
-You will then be asked for an ssh public key and admin password. You will have to set one of those. SSH public key authentication is recommended. After the machine is booted you will have set up ssh credentials for the GHES appliance through the GHES configuration portal.
+You will then be asked for an ssh public key and admin password. You will have to set one of those. SSH public key authentication is recommended. You will also have the chance to create multiple instances for replication. After the machine is booted you will have set up ssh credentials for the GHES appliance through the GHES configuration portal.
 
 Please visit the following pages for more information on setting up GitHub Enterprise Server through the CLI or ARM and the required configuration.
 
