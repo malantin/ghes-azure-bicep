@@ -4,6 +4,7 @@ param environment_prefix string
 param environment_name string
 
 @allowed([
+  '3.6.2'
   '3.3.5'
   '3.3.2'
   '3.2.7'
